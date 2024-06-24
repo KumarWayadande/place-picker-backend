@@ -1,5 +1,4 @@
 import { useRef, useState, useCallback, useEffect } from "react";
-
 import Places from "./components/Places.jsx";
 import Modal from "./components/Modal.jsx";
 import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
@@ -7,27 +6,17 @@ import logoImg from "./assets/logo.png";
 import AvailablePlaces from "./components/AvailablePlaces.jsx";
 import Error from "./components/Error.jsx";
 import { fetchUserPlaces, updateUserPlaces } from "./http.js";
+import useFetch from "./hooks/useFetch.jsx";
 
 function App() {
   const selectedPlace = useRef();
-  const [isFetching, setIsFetching] = useState(false);
-  const [error, setError] = useState();
-  useEffect(() => {
-    async function fetchPlaces() {
-      setIsFetching(true);
-      try {
-        const resData = await fetchUserPlaces();
-        setUserPlaces(resData);
-      } catch (error) {
-        setError({ message: error.message || "Could not fetch the data" });
-      }
-      setIsFetching(false);
-    }
-
-    fetchPlaces();
-  }, []);
-
-  const [userPlaces, setUserPlaces] = useState([]);
+  const {
+    isFetching,
+    fetchedData: userPlaces,
+    error,
+    setFetchedData: setUserPlaces,
+  } = useFetch(fetchUserPlaces, []);
+  // const [userPlaces, setUserPlaces] = useState([]);
   const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState();
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
@@ -78,7 +67,7 @@ function App() {
     }
 
     setModalIsOpen(false);
-  }, []);
+  }, [userPlaces, setUserPlaces]);
 
   function handleError() {
     setErrorUpdatingPlaces(null);
@@ -87,7 +76,10 @@ function App() {
   return (
     <>
       {errorUpdatingPlaces && (
-        <Modal onClose={handleError} open={errorUpdatingPlaces}>
+        <Modal
+          onClose={handleError}
+          open={errorUpdatingPlaces}
+        >
           {errorUpdatingPlaces && (
             <Error
               title={"An error occured"}
@@ -97,10 +89,13 @@ function App() {
           )}
         </Modal>
       )}
-      <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
+      <Modal
+        open={modalIsOpen}
+        onClose={handleStopRemovePlace}
+      >
         <DeleteConfirmation
-          onCancel={handleStopRemovePlace}
-          onConfirm={handleRemovePlace}
+        onCancel={handleStopRemovePlace}
+        onConfirm={handleRemovePlace}
         />
       </Modal>
 
